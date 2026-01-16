@@ -1,0 +1,144 @@
+import { stripe } from '@/lib/stripe-client';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getPlanByPriceId } from '@/types/subscription';
+import { NextResponse } from 'next/server';
+import Stripe from 'stripe';
+
+export async function POST(request: Request) {
+  const body = await request.text();
+  const signature = request.headers.get('stripe-signature');
+
+  if (!signature) {
+    return NextResponse.json(
+      { error: 'No signature provided' },
+      { status: 400 }
+    );
+  }
+
+  let event: Stripe.Event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch (error: any) {
+    console.error('Webhook signature verification failed:', error.message);
+    return NextResponse.json(
+      { error: 'Invalid signature' },
+      { status: 400 }
+    );
+  }
+
+  const supabase = createAdminClient();
+
+  try {
+    switch (event.type) {
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId = subscription.customer as string;
+        const priceId = subscription.items.data[0].price.id;
+        const planType = getPlanByPriceId(priceId);
+
+        if (!planType) {
+          console.error('Unknown price ID:', priceId);
+          break;
+        }
+
+        // Update customer ID in profiles
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        let userId: string;
+
+        if (!profile) {
+          // First time subscription - find user by metadata
+          const customer = await stripe.customers.retrieve(customerId);
+          if ('deleted' in customer) {
+            console.error('Customer deleted:', customerId);
+            break;
+          }
+
+          // Get user ID from checkout session metadata
+          const sessions = await stripe.checkout.sessions.list({
+            customer: customerId,
+            limit: 1,
+          });
+
+          if (sessions.data.length === 0) {
+            console.error('No session found for customer:', customerId);
+            break;
+          }
+
+          userId = sessions.data[0].client_reference_id || sessions.data[0].metadata?.userId || '';
+
+          if (!userId) {
+            console.error('No user ID found for customer:', customerId);
+            break;
+          }
+
+          // Update profile with stripe customer ID
+          await supabase
+            .from('profiles')
+            .update({ stripe_customer_id: customerId })
+            .eq('id', userId);
+        } else {
+          userId = profile.id;
+        }
+
+        // Upsert subscription
+        await supabase
+          .from('subscriptions')
+          .upsert({
+            user_id: userId,
+            stripe_subscription_id: subscription.id,
+            stripe_price_id: priceId,
+            plan_type: planType,
+            status: subscription.status as any,
+            current_period_start: new Date(
+              subscription.current_period_start * 1000
+            ).toISOString(),
+            current_period_end: new Date(
+              subscription.current_period_end * 1000
+            ).toISOString(),
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'stripe_subscription_id'
+          });
+
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+
+        await supabase
+          .from('subscriptions')
+          .update({
+            status: 'canceled',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', subscription.id);
+
+        break;
+      }
+
+      default:
+        console.log('Unhandled event type:', event.type);
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (error: any) {
+    console.error('Webhook handler error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Webhook handler failed' },
+      { status: 500 }
+    );
+  }
+}
