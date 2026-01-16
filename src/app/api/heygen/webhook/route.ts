@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -23,27 +23,40 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create a Supabase client with service role to bypass RLS
-    const supabase = await createClient();
+    // Create a Supabase admin client with service role to bypass RLS
+    const supabase = createAdminClient();
 
-    // Update video status in database
-    const updateData: any = {
-      status: status || 'processing',
-    };
+    // Update video status in database based on status
+    let dbError;
 
     if (status === 'completed') {
-      updateData.video_url = video_url || null;
-      updateData.thumbnail_url = thumbnail_url || null;
-      updateData.completed_at = new Date().toISOString();
+      const result = await (supabase
+        .from('videos') as any)
+        .update({
+          status: 'completed',
+          video_url: video_url || null,
+          thumbnail_url: thumbnail_url || null,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('heygen_video_id', video_id);
+      dbError = result.error;
     } else if (status === 'failed') {
-      updateData.error_message = error?.message || 'Video generation failed';
-      updateData.completed_at = new Date().toISOString();
+      const result = await (supabase
+        .from('videos') as any)
+        .update({
+          status: 'failed',
+          error_message: error?.message || 'Video generation failed',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('heygen_video_id', video_id);
+      dbError = result.error;
+    } else {
+      const result = await (supabase
+        .from('videos') as any)
+        .update({ status: status || 'processing' })
+        .eq('heygen_video_id', video_id);
+      dbError = result.error;
     }
-
-    const { error: dbError } = await supabase
-      .from('videos')
-      .update(updateData)
-      .eq('heygen_video_id', video_id);
 
     if (dbError) {
       console.error('Database update error:', dbError);

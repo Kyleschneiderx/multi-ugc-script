@@ -8,8 +8,8 @@ export async function getMonthlyUsage(userId: string) {
   const year = now.getFullYear();
   const month = now.getMonth() + 1; // JavaScript months are 0-indexed
 
-  const { data, error } = await supabase
-    .from('video_usage')
+  const { data, error } = await (supabase
+    .from('video_usage') as any)
     .select('*')
     .eq('user_id', userId)
     .eq('year', year)
@@ -30,8 +30,8 @@ export async function incrementUsage(userId: string, count: number = 1) {
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
 
-  const { data, error } = await supabase
-    .from('video_usage')
+  const { data, error } = await (supabase
+    .from('video_usage') as any)
     .upsert({
       user_id: userId,
       year,
@@ -57,8 +57,8 @@ export async function incrementUsage(userId: string, count: number = 1) {
     if (updateError) {
       // Fallback to manual increment if RPC doesn't exist
       const current = await getMonthlyUsage(userId);
-      const { error: fallbackError } = await supabase
-        .from('video_usage')
+      const { error: fallbackError } = await (supabase
+        .from('video_usage') as any)
         .update({
           videos_generated: current.videos_generated + count,
           updated_at: new Date().toISOString(),
@@ -92,8 +92,8 @@ export async function canGenerateVideos(
 export async function getUserSubscription(userId: string) {
   const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from('subscriptions')
+  const { data, error } = await (supabase
+    .from('subscriptions') as any)
     .select('*')
     .eq('user_id', userId)
     .eq('status', 'active')

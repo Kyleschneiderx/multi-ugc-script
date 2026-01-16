@@ -48,8 +48,8 @@ export async function POST(request: Request) {
         }
 
         // Update customer ID in profiles
-        const { data: profile } = await supabase
-          .from('profiles')
+        const { data: profile } = await (supabase
+          .from('profiles') as any)
           .select('id')
           .eq('stripe_customer_id', customerId)
           .single();
@@ -83,8 +83,8 @@ export async function POST(request: Request) {
           }
 
           // Update profile with stripe customer ID
-          await supabase
-            .from('profiles')
+          await (supabase
+            .from('profiles') as any)
             .update({ stripe_customer_id: customerId })
             .eq('id', userId);
         } else {
@@ -92,8 +92,8 @@ export async function POST(request: Request) {
         }
 
         // Upsert subscription
-        await supabase
-          .from('subscriptions')
+        await (supabase
+          .from('subscriptions') as any)
           .upsert({
             user_id: userId,
             stripe_subscription_id: subscription.id,
@@ -118,8 +118,8 @@ export async function POST(request: Request) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
 
-        await supabase
-          .from('subscriptions')
+        await (supabase
+          .from('subscriptions') as any)
           .update({
             status: 'canceled',
             updated_at: new Date().toISOString(),

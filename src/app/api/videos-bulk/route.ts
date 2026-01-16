@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         const videoId = response.data.video_id;
 
         // Save video record to database
-        await supabase.from('videos').insert({
+        await (supabase.from('videos') as any).insert({
           user_id: user.id,
           heygen_video_id: videoId,
           script_title: script.title || 'Untitled',
