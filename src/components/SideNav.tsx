@@ -50,9 +50,9 @@ export function SideNav() {
   };
 
   return (
-    <nav className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
+    <nav className="w-64 bg-white border-r border-gray-200 flex flex-col fixed top-0 left-0 h-screen">
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">HeyGen Studio</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Clipwave</h1>
       </div>
 
       <div className="flex-1 px-3">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useCSVReader } from 'react-papaparse';
 import { useUser } from '@/hooks/useUser';
 import { useUsage } from '@/hooks/useUsage';
 import { useAvatars } from '@/hooks/useAvatars';
@@ -14,6 +15,7 @@ import { Progress } from '@/components/ui/Progress';
 import type { Avatar, Voice } from '@/types/heygen';
 import type { Script } from '@/types/video-job';
 import { useRouter } from 'next/navigation';
+import { validateCSV, parseCSVToScripts } from '@/lib/csv-parser';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -40,6 +42,8 @@ export default function DashboardPage() {
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
+  const { CSVReader } = useCSVReader();
+
   const handleAddScript = () => {
     if (!newScriptText.trim()) return;
 
@@ -57,6 +61,30 @@ export default function DashboardPage() {
 
   const handleDeleteScript = (id: string) => {
     setScripts(scripts.filter((s) => s.id !== id));
+  };
+
+  const handleCSVUpload = (results: any) => {
+    try {
+      const data = results.data;
+
+      // Validate CSV
+      const validation = validateCSV(data);
+      if (!validation.valid) {
+        alert(`CSV Error: ${validation.error}`);
+        return;
+      }
+
+      // Parse CSV to scripts
+      const newScripts = parseCSVToScripts(data);
+
+      // Add to existing scripts
+      setScripts([...scripts, ...newScripts]);
+
+      alert(`Successfully imported ${newScripts.length} script(s) from CSV!`);
+    } catch (error: any) {
+      console.error('CSV upload error:', error);
+      alert(`Failed to upload CSV: ${error.message || 'Unknown error'}`);
+    }
   };
 
   const handleSelectGroup = async (group: any) => {
@@ -215,7 +243,7 @@ export default function DashboardPage() {
       );
       setScripts([]);
       usage.refetch();
-      router.push('/dashboard/history');
+      router.push('/dashboard/library');
     } catch (error: any) {
       alert(error.message || 'Failed to generate videos');
     } finally {
@@ -557,7 +585,35 @@ export default function DashboardPage() {
             <CardTitle>3. Add Scripts ({scripts.length})</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* CSV Upload Section */}
+            <div className="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-700">Bulk Import from CSV</h3>
+                <Badge>Optional</Badge>
+              </div>
+              <p className="text-xs text-gray-500 mb-3">
+                Upload a CSV file with columns: <code className="bg-gray-200 px-1 rounded">title</code> (optional) and <code className="bg-gray-200 px-1 rounded">script</code> (required)
+              </p>
+              <CSVReader
+                onUploadAccepted={handleCSVUpload}
+                config={{
+                  header: true,
+                  skipEmptyLines: true,
+                }}
+              >
+                {({ getRootProps }: any) => (
+                  <div {...getRootProps()} className="text-center">
+                    <Button variant="secondary" size="sm">
+                      📁 Upload CSV File
+                    </Button>
+                  </div>
+                )}
+              </CSVReader>
+            </div>
+
+            {/* Manual Script Entry */}
             <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Or Add Scripts Manually</h3>
               <input
                 type="text"
                 value={newScriptTitle}

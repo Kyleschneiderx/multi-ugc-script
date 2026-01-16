@@ -34,15 +34,15 @@ export async function fetchAvatarsInGroup(groupId: string): Promise<Avatar[]> {
 
   // Map the response to match our Avatar interface
   const mapped = avatarList.map((avatar: any, index: number) => {
-    if (!avatar.name) {
+    if (!avatar.name && !avatar.avatar_name) {
       console.log('Avatar without name:', avatar);
     }
     return {
-      avatar_id: avatar.id || `avatar-${index}`,
-      avatar_name: avatar.name || avatar.display_name || `Look ${index + 1}`,
-      gender: 'unknown',
-      preview_image_url: avatar.image_url,
-      preview_video_url: avatar.motion_preview_url || undefined,
+      avatar_id: avatar.id || avatar.avatar_id || `avatar-${index}`,
+      avatar_name: avatar.name || avatar.avatar_name || avatar.display_name || `Look ${index + 1}`,
+      gender: avatar.gender || 'unknown',
+      preview_image_url: avatar.image_url || avatar.preview_image_url,
+      preview_video_url: avatar.motion_preview_url || avatar.preview_video_url || undefined,
       is_public: true,
       default_voice_id: avatar.default_voice_id || null,
     };
@@ -114,6 +114,8 @@ export async function createVideo({
   if (callbackUrl) {
     requestBody.callback_id = callbackUrl;
   }
+
+  console.log('Creating video with request body:', JSON.stringify(requestBody, null, 2));
 
   return await heygenFetch('/v2/video/generate', {
     method: 'POST',

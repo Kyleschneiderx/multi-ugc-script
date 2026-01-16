@@ -12,7 +12,7 @@ export default function LibraryPage() {
   const [filter, setFilter] = useState<'all' | 'completed' | 'processing' | 'failed'>('all');
   const [pollingVideos, setPollingVideos] = useState<Set<string>>(new Set());
 
-  // Auto-refresh processing videos
+  // Auto-refresh processing videos (reduced frequency since we have webhooks)
   useEffect(() => {
     const processingVideos = videos.filter(
       (v) => v.status === 'pending' || v.status === 'processing'
@@ -22,11 +22,11 @@ export default function LibraryPage() {
       return;
     }
 
-    // Poll every 10 seconds for processing videos
+    // Poll every 60 seconds as a fallback (webhooks handle real-time updates)
     const interval = setInterval(() => {
-      console.log('Polling for video status updates...');
+      console.log('Polling for video status updates (fallback)...');
       refetch();
-    }, 10000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [videos, refetch]);
