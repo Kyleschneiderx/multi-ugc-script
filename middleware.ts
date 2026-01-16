@@ -34,6 +34,13 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Auth Protection Logic:
+  // 1. Dashboard routes (/dashboard/*) - Protected, require authentication
+  // 2. Home page (/) - Redirect authenticated users to dashboard
+  // 3. Auth pages (/login, /signup) - Redirect authenticated users to dashboard
+  // 4. Pricing (/pricing) - Public, accessible to all
+  // 5. API routes - Have individual auth checks in route handlers
+
   // Protected routes - require authentication
   if (request.nextUrl.pathname.startsWith('/dashboard')) {
     if (!user) {
@@ -43,9 +50,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect authenticated users from auth pages to dashboard
+  // Redirect authenticated users from public pages to dashboard
   if (
-    (request.nextUrl.pathname === '/login' ||
+    (request.nextUrl.pathname === '/' ||
+      request.nextUrl.pathname === '/login' ||
       request.nextUrl.pathname === '/signup') &&
     user
   ) {
