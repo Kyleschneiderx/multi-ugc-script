@@ -94,24 +94,34 @@ export async function POST(request: Request) {
           userId = profile.id;
         }
 
+        // Prepare subscription data with safe timestamp handling
+        const subscriptionData: any = {
+          user_id: userId,
+          stripe_subscription_id: subscription.id,
+          stripe_price_id: priceId,
+          plan_type: planType,
+          status: subscription.status as any,
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Only add period dates if they exist (incomplete subscriptions may not have them)
+        if (subscription.current_period_start) {
+          subscriptionData.current_period_start = new Date(
+            subscription.current_period_start * 1000
+          ).toISOString();
+        }
+
+        if (subscription.current_period_end) {
+          subscriptionData.current_period_end = new Date(
+            subscription.current_period_end * 1000
+          ).toISOString();
+        }
+
         // Upsert subscription
         await (supabase
           .from('subscriptions') as any)
-          .upsert({
-            user_id: userId,
-            stripe_subscription_id: subscription.id,
-            stripe_price_id: priceId,
-            plan_type: planType,
-            status: subscription.status as any,
-            current_period_start: new Date(
-              subscription.current_period_start * 1000
-            ).toISOString(),
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
-            cancel_at_period_end: subscription.cancel_at_period_end,
-            updated_at: new Date().toISOString(),
-          }, {
+          .upsert(subscriptionData, {
             onConflict: 'stripe_subscription_id'
           });
 
