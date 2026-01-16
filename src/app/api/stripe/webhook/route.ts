@@ -37,6 +37,8 @@ export async function POST(request: Request) {
   const supabase = createAdminClient();
 
   try {
+    console.log('Processing webhook event:', event.type, 'Event ID:', event.id);
+
     switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
@@ -45,17 +47,28 @@ export async function POST(request: Request) {
         const priceId = subscription.items.data[0].price.id;
         const planType = getPlanByPriceId(priceId);
 
+        console.log('Subscription details:', {
+          subscriptionId: subscription.id,
+          customerId,
+          priceId,
+          planType,
+          status: subscription.status,
+        });
+
         if (!planType) {
           console.error('Unknown price ID:', priceId);
           break;
         }
 
         // Update customer ID in profiles
-        const { data: profile } = await (supabase
+        console.log('Looking for profile with stripe_customer_id:', customerId);
+        const { data: profile, error: profileError } = await (supabase
           .from('profiles') as any)
           .select('id')
           .eq('stripe_customer_id', customerId)
           .single();
+
+        console.log('Profile lookup result:', { profile, error: profileError });
 
         let userId: string;
 
@@ -80,16 +93,25 @@ export async function POST(request: Request) {
 
           userId = sessions.data[0].client_reference_id || sessions.data[0].metadata?.userId || '';
 
+          console.log('Found user ID from session:', userId);
+
           if (!userId) {
             console.error('No user ID found for customer:', customerId);
             break;
           }
 
           // Update profile with stripe customer ID
-          await (supabase
+          console.log('Updating profile with stripe_customer_id for user:', userId);
+          const { error: updateError } = await (supabase
             .from('profiles') as any)
             .update({ stripe_customer_id: customerId })
             .eq('id', userId);
+
+          if (updateError) {
+            console.error('Failed to update profile:', updateError);
+          } else {
+            console.log('Successfully updated profile with stripe_customer_id');
+          }
         } else {
           userId = profile.id;
         }
@@ -119,11 +141,19 @@ export async function POST(request: Request) {
         }
 
         // Upsert subscription
-        await (supabase
+        console.log('Upserting subscription with data:', subscriptionData);
+        const { data: upsertedSub, error: upsertError } = await (supabase
           .from('subscriptions') as any)
           .upsert(subscriptionData, {
             onConflict: 'stripe_subscription_id'
-          });
+          })
+          .select();
+
+        if (upsertError) {
+          console.error('Failed to upsert subscription:', upsertError);
+        } else {
+          console.log('Successfully upserted subscription:', upsertedSub);
+        }
 
         break;
       }
