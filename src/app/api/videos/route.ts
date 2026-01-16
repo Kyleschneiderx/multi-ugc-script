@@ -11,8 +11,8 @@ export async function GET() {
     }
 
     // Fetch all videos for the user, ordered by created_at descending
-    const { data: videos, error } = await supabase
-      .from('videos')
+    const { data: videos, error } = await (supabase
+      .from('videos') as any)
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });

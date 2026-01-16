@@ -47,7 +47,7 @@ export async function incrementUsage(userId: string, count: number = 1) {
 
   // If record exists, we need to increment
   if (data) {
-    const { error: updateError } = await supabase.rpc('increment_video_usage', {
+    const { error: updateError } = await (supabase as any).rpc('increment_video_usage', {
       p_user_id: userId,
       p_year: year,
       p_month: month,

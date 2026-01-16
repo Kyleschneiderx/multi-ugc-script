@@ -25,8 +25,8 @@ export async function GET(
 
     // Update database with latest status
     if (status.status === 'completed' || status.status === 'failed') {
-      await supabase
-        .from('videos')
+      await (supabase
+        .from('videos') as any)
         .update({
           status: status.status,
           video_url: status.video_url || null,
@@ -37,8 +37,8 @@ export async function GET(
         .eq('heygen_video_id', videoId)
         .eq('user_id', user.id);
     } else if (status.status === 'processing') {
-      await supabase
-        .from('videos')
+      await (supabase
+        .from('videos') as any)
         .update({
           status: 'processing',
         })
