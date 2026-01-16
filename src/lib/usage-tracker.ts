@@ -96,7 +96,9 @@ export async function getUserSubscription(userId: string) {
     .from('subscriptions') as any)
     .select('*')
     .eq('user_id', userId)
-    .eq('status', 'active')
+    .in('status', ['active', 'incomplete', 'trialing'])
+    .order('created_at', { ascending: false })
+    .limit(1)
     .single();
 
   if (error && error.code !== 'PGRST116') {
