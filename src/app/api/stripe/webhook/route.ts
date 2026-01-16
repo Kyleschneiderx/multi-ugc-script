@@ -57,7 +57,10 @@ export async function POST(request: Request) {
 
         if (!planType) {
           console.error('Unknown price ID:', priceId);
-          break;
+          return NextResponse.json(
+            { error: 'Unknown price ID' },
+            { status: 500 }
+          );
         }
 
         // Update customer ID in profiles
@@ -77,7 +80,10 @@ export async function POST(request: Request) {
           const customer = await stripe.customers.retrieve(customerId);
           if ('deleted' in customer) {
             console.error('Customer deleted:', customerId);
-            break;
+            return NextResponse.json(
+              { error: 'Customer has been deleted' },
+              { status: 500 }
+            );
           }
 
           // Get user ID from checkout session metadata
@@ -88,7 +94,10 @@ export async function POST(request: Request) {
 
           if (sessions.data.length === 0) {
             console.error('No session found for customer:', customerId);
-            break;
+            return NextResponse.json(
+              { error: 'No checkout session found for customer' },
+              { status: 500 }
+            );
           }
 
           userId = sessions.data[0].client_reference_id || sessions.data[0].metadata?.userId || '';
@@ -97,7 +106,10 @@ export async function POST(request: Request) {
 
           if (!userId) {
             console.error('No user ID found for customer:', customerId);
-            break;
+            return NextResponse.json(
+              { error: 'User ID not found in session metadata' },
+              { status: 500 }
+            );
           }
 
           // Update profile with stripe customer ID
