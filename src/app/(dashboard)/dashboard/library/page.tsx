@@ -10,11 +10,28 @@ import { Button } from '@/components/ui/Button';
 export default function LibraryPage() {
   const { videos, loading, error, refetch } = useVideos();
   const [filter, setFilter] = useState<'all' | 'completed' | 'processing' | 'failed'>('all');
+  const [checkingVideos, setCheckingVideos] = useState<Set<string>>(new Set());
 
   const filteredVideos = videos.filter((video) => {
     if (filter === 'all') return true;
     return video.status === filter;
   });
+
+  const checkVideoStatus = async (heygenVideoId: string) => {
+    setCheckingVideos((prev) => new Set(prev).add(heygenVideoId));
+    try {
+      await fetch(`/api/videos/status/${heygenVideoId}`);
+      await refetch();
+    } catch (error) {
+      console.error('Failed to check video status:', error);
+    } finally {
+      setCheckingVideos((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(heygenVideoId);
+        return newSet;
+      });
+    }
+  };
 
   const getStatusColor = (status: Video['status']) => {
     switch (status) {
@@ -165,12 +182,22 @@ export default function LibraryPage() {
                   )}
 
                   {(video.status === 'processing' || video.status === 'pending') && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Spinner size="sm" />
-                      <span>
-                        {video.status === 'pending' ? 'Pending...' : 'Processing...'}
-                      </span>
-                      <span className="text-xs text-gray-500">(auto-updating)</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Spinner size="sm" />
+                        <span>
+                          {video.status === 'pending' ? 'Pending...' : 'Processing...'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => checkVideoStatus(video.heygen_video_id)}
+                        disabled={checkingVideos.has(video.heygen_video_id)}
+                        className="w-full px-3 py-1.5 text-sm rounded-lg font-semibold transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {checkingVideos.has(video.heygen_video_id)
+                          ? 'Checking...'
+                          : 'Check Status'}
+                      </button>
                     </div>
                   )}
 
