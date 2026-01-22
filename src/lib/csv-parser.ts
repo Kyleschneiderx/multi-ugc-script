@@ -31,13 +31,17 @@ export function validateCSV(data: any[]): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-export function parseCSVToScripts(data: CSVRow[]): Script[] {
+export function parseCSVToScripts(
+  data: CSVRow[],
+  orientation: 'landscape' | 'portrait' = 'landscape'
+): Script[] {
   return data
     .filter((row) => row.script && row.script.trim())
     .map((row, index) => ({
       id: crypto.randomUUID(),
       title: row.title?.trim() || `Video ${index + 1}`,
       text: row.script.trim(),
+      orientation,
       createdAt: new Date(),
     }));
 }

@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { avatarId, voiceId, script, title } = await request.json();
+    const { avatarId, voiceId, script, title, orientation = 'landscape' } = await request.json();
 
     if (!avatarId || !voiceId || !script) {
       return NextResponse.json(
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       voiceId,
       script,
       title,
+      orientation,
     });
 
     const videoId = response.data.video_id;
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
       script_text: script,
       avatar_id: avatarId,
       voice_id: voiceId,
+      orientation,
       status: 'pending',
     });
 

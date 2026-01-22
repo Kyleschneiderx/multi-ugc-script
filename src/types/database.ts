@@ -93,6 +93,7 @@ export interface Database {
           script_text: string;
           avatar_id: string;
           voice_id: string;
+          orientation: 'landscape' | 'portrait';
           status: 'pending' | 'processing' | 'completed' | 'failed';
           video_url: string | null;
           thumbnail_url: string | null;
@@ -108,6 +109,7 @@ export interface Database {
           script_text: string;
           avatar_id: string;
           voice_id: string;
+          orientation?: 'landscape' | 'portrait';
           status: 'pending' | 'processing' | 'completed' | 'failed';
           video_url?: string | null;
           thumbnail_url?: string | null;
@@ -116,6 +118,7 @@ export interface Database {
           completed_at?: string | null;
         };
         Update: {
+          orientation?: 'landscape' | 'portrait';
           status?: 'pending' | 'processing' | 'completed' | 'failed';
           video_url?: string | null;
           thumbnail_url?: string | null;

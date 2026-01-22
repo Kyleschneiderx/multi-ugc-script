@@ -84,14 +84,21 @@ export async function createVideo({
   voiceId,
   script,
   title,
+  orientation = 'landscape',
   callbackUrl,
 }: {
   avatarId: string;
   voiceId: string;
   script: string;
   title?: string;
+  orientation?: 'landscape' | 'portrait';
   callbackUrl?: string;
 }): Promise<CreateVideoResponse> {
+  // Map orientation to dimension
+  const dimension = orientation === 'portrait'
+    ? { width: 720, height: 1280 }  // 9:16 portrait
+    : { width: 1280, height: 720 }; // 16:9 landscape (default)
+
   const requestBody: any = {
     video_inputs: [
       {
@@ -106,6 +113,7 @@ export async function createVideo({
         },
       },
     ],
+    dimension,
     title: title || 'Generated Video',
     test: false,
   };

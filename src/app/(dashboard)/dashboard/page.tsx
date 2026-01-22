@@ -27,6 +27,7 @@ export default function DashboardPage() {
 
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<Voice | null>(null);
+  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [scripts, setScripts] = useState<Script[]>([]);
   const [newScriptTitle, setNewScriptTitle] = useState('');
   const [newScriptText, setNewScriptText] = useState('');
@@ -51,6 +52,7 @@ export default function DashboardPage() {
       id: crypto.randomUUID(),
       title: newScriptTitle.trim() || `Video ${scripts.length + 1}`,
       text: newScriptText.trim(),
+      orientation,
       createdAt: new Date(),
     };
 
@@ -74,8 +76,8 @@ export default function DashboardPage() {
         return;
       }
 
-      // Parse CSV to scripts
-      const newScripts = parseCSVToScripts(data);
+      // Parse CSV to scripts with current orientation
+      const newScripts = parseCSVToScripts(data, orientation);
 
       // Add to existing scripts
       setScripts([...scripts, ...newScripts]);
@@ -579,10 +581,79 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Step 3: Add Scripts */}
+        {/* Step 3: Select Orientation */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>3. Add Scripts ({scripts.length})</CardTitle>
+            <CardTitle>3. Select Video Orientation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <label
+                className={`flex-1 cursor-pointer rounded-lg border-2 p-6 transition ${
+                  orientation === 'landscape'
+                    ? 'border-indigo-600 bg-indigo-50'
+                    : 'border-gray-200 hover:border-indigo-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="orientation"
+                  value="landscape"
+                  checked={orientation === 'landscape'}
+                  onChange={(e) => setOrientation(e.target.value as 'landscape' | 'portrait')}
+                  className="sr-only"
+                />
+                <div className="text-center">
+                  <div className="mb-3 flex justify-center">
+                    <div className="w-24 h-14 border-4 border-gray-400 rounded flex items-center justify-center bg-white">
+                      <span className="text-xs font-medium text-gray-600">16:9</span>
+                    </div>
+                  </div>
+                  <div className="font-semibold text-gray-900 mb-1">Landscape</div>
+                  <div className="text-sm text-gray-600">1280 × 720</div>
+                </div>
+              </label>
+
+              <label
+                className={`flex-1 cursor-pointer rounded-lg border-2 p-6 transition ${
+                  orientation === 'portrait'
+                    ? 'border-indigo-600 bg-indigo-50'
+                    : 'border-gray-200 hover:border-indigo-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="orientation"
+                  value="portrait"
+                  checked={orientation === 'portrait'}
+                  onChange={(e) => setOrientation(e.target.value as 'landscape' | 'portrait')}
+                  className="sr-only"
+                />
+                <div className="text-center">
+                  <div className="mb-3 flex justify-center">
+                    <div className="w-14 h-24 border-4 border-gray-400 rounded flex items-center justify-center bg-white">
+                      <span className="text-xs font-medium text-gray-600">9:16</span>
+                    </div>
+                  </div>
+                  <div className="font-semibold text-gray-900 mb-1">Portrait</div>
+                  <div className="text-sm text-gray-600">720 × 1280</div>
+                </div>
+              </label>
+            </div>
+            {orientation && (
+              <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
+                <span className="text-sm font-medium text-indigo-900">
+                  Selected: {orientation === 'landscape' ? 'Landscape (16:9)' : 'Portrait (9:16)'}
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Step 4: Add Scripts */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>4. Add Scripts ({scripts.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {/* CSV Upload Section */}

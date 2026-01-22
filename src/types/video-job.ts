@@ -2,6 +2,7 @@ export interface Script {
   id: string;
   title: string;
   text: string;
+  orientation?: 'landscape' | 'portrait';
   createdAt: Date;
 }
 

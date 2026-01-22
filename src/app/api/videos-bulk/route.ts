@@ -7,6 +7,7 @@ interface Script {
   id: string;
   title: string;
   text: string;
+  orientation?: 'landscape' | 'portrait';
 }
 
 export async function POST(request: Request) {
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
           voiceId,
           script: script.text,
           title: script.title,
+          orientation: script.orientation || 'landscape',
           callbackUrl,
         });
 
@@ -83,6 +85,7 @@ export async function POST(request: Request) {
           script_text: script.text,
           avatar_id: avatarId,
           voice_id: voiceId,
+          orientation: script.orientation || 'landscape',
           status: 'pending',
         });
 
