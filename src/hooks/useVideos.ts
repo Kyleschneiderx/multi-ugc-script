@@ -10,6 +10,7 @@ export interface Video {
   script_text: string;
   avatar_id: string;
   voice_id: string;
+  orientation: 'landscape' | 'portrait';
   status: 'pending' | 'processing' | 'completed' | 'failed';
   video_url: string | null;
   thumbnail_url: string | null;
