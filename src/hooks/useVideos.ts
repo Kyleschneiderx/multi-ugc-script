@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export interface Video {
   id: string;
@@ -46,6 +47,44 @@ export function useVideos() {
 
   useEffect(() => {
     fetchVideos();
+
+    // Set up real-time subscription for video updates
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel('videos-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'videos',
+        },
+        (payload) => {
+          console.log('Real-time video update:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            // Add new video to the list
+            setVideos((prev) => [payload.new as Video, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            // Update existing video
+            setVideos((prev) =>
+              prev.map((video) =>
+                video.id === payload.new.id ? (payload.new as Video) : video
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            // Remove deleted video
+            setVideos((prev) => prev.filter((video) => video.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchVideos]);
 
   return {
