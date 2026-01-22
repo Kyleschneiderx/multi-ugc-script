@@ -48,7 +48,7 @@ export function useVideos() {
   useEffect(() => {
     fetchVideos();
 
-    // Set up real-time subscription for video updates
+    // Set up real-time subscription for video updates (works in production with webhooks)
     const supabase = createClient();
 
     const channel = supabase
@@ -86,6 +86,41 @@ export function useVideos() {
       supabase.removeChannel(channel);
     };
   }, [fetchVideos]);
+
+  // Smart polling fallback for local development (webhooks don't work on localhost)
+  useEffect(() => {
+    const processingVideos = videos.filter(
+      (v) => v.status === 'pending' || v.status === 'processing'
+    );
+
+    // Only poll if there are videos being processed
+    if (processingVideos.length === 0) {
+      return;
+    }
+
+    console.log(`Polling status for ${processingVideos.length} video(s)...`);
+
+    // Check status of each processing video
+    const checkAllVideos = async () => {
+      for (const video of processingVideos) {
+        try {
+          await fetch(`/api/videos/status/${video.heygen_video_id}`);
+        } catch (error) {
+          console.error(`Failed to check status for video ${video.heygen_video_id}:`, error);
+        }
+      }
+      // Refetch all videos after checking statuses
+      await fetchVideos();
+    };
+
+    // Poll every 10 seconds (HeyGen videos typically take 30-60+ seconds)
+    const interval = setInterval(checkAllVideos, 10000);
+
+    // Also check immediately
+    checkAllVideos();
+
+    return () => clearInterval(interval);
+  }, [videos, fetchVideos]);
 
   return {
     videos,
