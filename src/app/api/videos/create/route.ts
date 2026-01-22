@@ -34,6 +34,13 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get the base URL for callback
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const callbackUrl = `${protocol}://${host}/api/heygen/webhook`;
+
+    console.log('Using callback URL:', callbackUrl);
+
     // Create video with HeyGen
     const response = await createVideo({
       avatarId,
@@ -41,6 +48,7 @@ export async function POST(request: Request) {
       script,
       title,
       orientation,
+      callbackUrl,
     });
 
     const videoId = response.data.video_id;
