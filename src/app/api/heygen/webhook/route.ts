@@ -17,16 +17,29 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    console.log('HeyGen webhook received:', body);
+    console.log('HeyGen webhook received:', JSON.stringify(body, null, 2));
 
-    // HeyGen webhook payload typically includes:
-    // - video_id
-    // - status (completed, failed, etc.)
-    // - video_url (if completed)
-    // - thumbnail_url (if completed)
-    // - error (if failed)
+    // HeyGen webhook payload structure:
+    // {
+    //   "event_type": "avatar_video.success" | "avatar_video.fail",
+    //   "event_data": {
+    //     "video_id": "...",
+    //     "url": "...",
+    //     "gif_download_url": "...",
+    //     "callback_id": "..."
+    //   }
+    // }
 
-    const { video_id, status, video_url, thumbnail_url, error } = body;
+    const { event_type, event_data } = body;
+
+    if (!event_type || !event_data) {
+      return NextResponse.json(
+        { error: 'Invalid webhook payload structure' },
+        { status: 400 }
+      );
+    }
+
+    const { video_id, url } = event_data;
 
     if (!video_id) {
       return NextResponse.json(
@@ -38,44 +51,44 @@ export async function POST(request: Request) {
     // Create a Supabase admin client with service role to bypass RLS
     const supabase = createAdminClient();
 
-    // Update video status in database based on status
+    // Update video status based on event type
     let dbError;
 
-    if (status === 'completed') {
+    if (event_type === 'avatar_video.success') {
       const result = await (supabase
         .from('videos') as any)
         .update({
           status: 'completed',
-          video_url: video_url || null,
-          thumbnail_url: thumbnail_url || null,
+          video_url: url || null,
+          thumbnail_url: event_data.gif_download_url || null,
           completed_at: new Date().toISOString(),
         })
         .eq('heygen_video_id', video_id);
       dbError = result.error;
-    } else if (status === 'failed') {
+
+      console.log(`Video ${video_id} completed successfully`);
+    } else if (event_type === 'avatar_video.fail') {
       const result = await (supabase
         .from('videos') as any)
         .update({
           status: 'failed',
-          error_message: error?.message || 'Video generation failed',
+          error_message: 'Video generation failed',
           completed_at: new Date().toISOString(),
         })
         .eq('heygen_video_id', video_id);
       dbError = result.error;
+
+      console.log(`Video ${video_id} failed`);
     } else {
-      const result = await (supabase
-        .from('videos') as any)
-        .update({ status: status || 'processing' })
-        .eq('heygen_video_id', video_id);
-      dbError = result.error;
+      // Unknown event type - log it but don't fail
+      console.log(`Received unknown event type: ${event_type}`);
+      return NextResponse.json({ success: true, message: 'Event type not handled' });
     }
 
     if (dbError) {
       console.error('Database update error:', dbError);
       throw dbError;
     }
-
-    console.log(`Video ${video_id} status updated to ${status}`);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

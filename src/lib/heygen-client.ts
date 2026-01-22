@@ -118,9 +118,9 @@ export async function createVideo({
     test: false,
   };
 
-  // Add callback URL if provided
+  // Add callback URL if provided (correct parameter name is callback_url, not callback_id)
   if (callbackUrl) {
-    requestBody.callback_id = callbackUrl;
+    requestBody.callback_url = callbackUrl;
   }
 
   console.log('Creating video with request body:', JSON.stringify(requestBody, null, 2));
