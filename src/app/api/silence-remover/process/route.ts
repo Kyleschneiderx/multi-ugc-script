@@ -44,7 +44,11 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
         'X-API-Key': process.env.SILENCE_REMOVER_API_KEY || '',
       },
-      body: JSON.stringify({ video_url: videoUrl }),
+      body: JSON.stringify({
+        video_url: videoUrl,
+        video_id: videoId,
+        upload_to_storage: true,
+      }),
     });
 
     if (!response.ok) {
