@@ -57,8 +57,10 @@ export async function POST(request: Request) {
 
         if (!planType) {
           console.error('Unknown price ID:', priceId);
+          console.error('Expected basic price IDs:', process.env.STRIPE_BASIC_PRICE_ID);
+          console.error('Expected pro price IDs:', process.env.STRIPE_PRO_PRICE_ID);
           return NextResponse.json(
-            { error: 'Unknown price ID' },
+            { error: `Unknown price ID: ${priceId}` },
             { status: 500 }
           );
         }

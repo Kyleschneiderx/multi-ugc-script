@@ -40,9 +40,20 @@ export const PLANS: Record<PlanType, SubscriptionPlan> = {
   },
 };
 
+// Hardcoded price IDs as fallback (must match Stripe dashboard)
+const BASIC_PRICE_IDS = [
+  process.env.STRIPE_BASIC_PRICE_ID,
+  'price_1SpxVcROopJQkds4bzEXgbJT', // Production price ID
+].filter(Boolean);
+
+const PRO_PRICE_IDS = [
+  process.env.STRIPE_PRO_PRICE_ID,
+  'price_1SpxVzROopJQkds4aOfIyPuu', // Production price ID
+].filter(Boolean);
+
 export function getPlanByPriceId(priceId: string): PlanType | null {
-  if (priceId === PLANS.basic.priceId) return 'basic';
-  if (priceId === PLANS.pro.priceId) return 'pro';
+  if (BASIC_PRICE_IDS.includes(priceId)) return 'basic';
+  if (PRO_PRICE_IDS.includes(priceId)) return 'pro';
   return null;
 }
 
