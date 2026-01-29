@@ -44,7 +44,7 @@ export async function GET(
     console.log('Silence remover API response:', JSON.stringify(data, null, 2));
 
     // Get the processed URL from the response (check multiple possible field names)
-    const processedUrl = data.processed_url || data.output_url || data.url || null;
+    const processedUrl = data.processed_url || data.storage_url || data.supabase_url || data.output_url || data.url || null;
 
     // If completed and we have a videoId, update the database
     if (data.status === 'completed' && processedUrl && videoId) {
