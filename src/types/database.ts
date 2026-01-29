@@ -98,6 +98,7 @@ export interface Database {
           video_url: string | null;
           thumbnail_url: string | null;
           error_message: string | null;
+          processed_url: string | null;
           created_at: string;
           completed_at: string | null;
         };
@@ -114,6 +115,7 @@ export interface Database {
           video_url?: string | null;
           thumbnail_url?: string | null;
           error_message?: string | null;
+          processed_url?: string | null;
           created_at?: string;
           completed_at?: string | null;
         };
@@ -123,6 +125,7 @@ export interface Database {
           video_url?: string | null;
           thumbnail_url?: string | null;
           error_message?: string | null;
+          processed_url?: string | null;
           completed_at?: string | null;
         };
       };
