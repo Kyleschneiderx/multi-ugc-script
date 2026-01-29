@@ -41,18 +41,27 @@ export async function GET(
     }
 
     const data = await response.json();
+    console.log('Silence remover API response:', JSON.stringify(data, null, 2));
+
+    // Get the processed URL from the response (check multiple possible field names)
+    const processedUrl = data.processed_url || data.output_url || data.url || null;
 
     // If completed and we have a videoId, update the database
-    if (data.status === 'completed' && data.processed_url && videoId) {
-      await (supabase.from('videos') as any)
-        .update({ processed_url: data.processed_url })
+    if (data.status === 'completed' && processedUrl && videoId) {
+      console.log('Updating video', videoId, 'with processed_url:', processedUrl);
+      const { error: updateError } = await (supabase.from('videos') as any)
+        .update({ processed_url: processedUrl })
         .eq('id', videoId)
         .eq('user_id', user.id);
+
+      if (updateError) {
+        console.error('Failed to update video with processed_url:', updateError);
+      }
     }
 
     return NextResponse.json({
       status: data.status,
-      processedUrl: data.processed_url || null,
+      processedUrl: processedUrl,
       error: data.error || null,
     });
   } catch (error: any) {
