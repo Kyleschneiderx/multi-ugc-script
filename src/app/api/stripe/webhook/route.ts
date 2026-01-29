@@ -172,6 +172,88 @@ export async function POST(request: Request) {
         break;
       }
 
+      case 'checkout.session.completed': {
+        // Handle successful checkout - backup for subscription creation
+        const session = event.data.object as Stripe.Checkout.Session;
+
+        console.log('Checkout session completed:', {
+          sessionId: session.id,
+          customerId: session.customer,
+          subscriptionId: session.subscription,
+          clientReferenceId: session.client_reference_id,
+        });
+
+        // If this is a subscription checkout, ensure the subscription is created
+        if (session.mode === 'subscription' && session.subscription) {
+          const subscriptionId = session.subscription as string;
+          const customerId = session.customer as string;
+          const userId = session.client_reference_id;
+
+          if (!userId) {
+            console.error('No user ID in checkout session');
+            break;
+          }
+
+          // Update profile with stripe customer ID
+          console.log('Updating profile from checkout.session.completed for user:', userId);
+          const { error: profileUpdateError } = await (supabase
+            .from('profiles') as any)
+            .update({ stripe_customer_id: customerId })
+            .eq('id', userId);
+
+          if (profileUpdateError) {
+            console.error('Failed to update profile from checkout:', profileUpdateError);
+          }
+
+          // Fetch the subscription details from Stripe
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const priceId = subscription.items.data[0].price.id;
+          const planType = getPlanByPriceId(priceId);
+
+          if (!planType) {
+            console.error('Unknown price ID in checkout:', priceId);
+            break;
+          }
+
+          const subscriptionData: any = {
+            user_id: userId,
+            stripe_subscription_id: subscription.id,
+            stripe_price_id: priceId,
+            plan_type: planType,
+            status: subscription.status,
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            updated_at: new Date().toISOString(),
+          };
+
+          if (subscription.current_period_start) {
+            subscriptionData.current_period_start = new Date(
+              subscription.current_period_start * 1000
+            ).toISOString();
+          }
+
+          if (subscription.current_period_end) {
+            subscriptionData.current_period_end = new Date(
+              subscription.current_period_end * 1000
+            ).toISOString();
+          }
+
+          console.log('Upserting subscription from checkout.session.completed:', subscriptionData);
+          const { error: upsertError } = await (supabase
+            .from('subscriptions') as any)
+            .upsert(subscriptionData, {
+              onConflict: 'stripe_subscription_id'
+            });
+
+          if (upsertError) {
+            console.error('Failed to upsert subscription from checkout:', upsertError);
+          } else {
+            console.log('Successfully created subscription from checkout.session.completed');
+          }
+        }
+
+        break;
+      }
+
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
 

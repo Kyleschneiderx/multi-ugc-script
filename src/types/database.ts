@@ -30,9 +30,9 @@ export interface Database {
           stripe_subscription_id: string;
           stripe_price_id: string;
           plan_type: 'basic' | 'pro';
-          status: 'active' | 'canceled' | 'past_due' | 'incomplete';
-          current_period_start: string;
-          current_period_end: string;
+          status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'unpaid';
+          current_period_start: string | null;
+          current_period_end: string | null;
           cancel_at_period_end: boolean;
           created_at: string;
           updated_at: string;
@@ -43,9 +43,9 @@ export interface Database {
           stripe_subscription_id: string;
           stripe_price_id: string;
           plan_type: 'basic' | 'pro';
-          status: 'active' | 'canceled' | 'past_due' | 'incomplete';
-          current_period_start: string;
-          current_period_end: string;
+          status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'unpaid';
+          current_period_start?: string | null;
+          current_period_end?: string | null;
           cancel_at_period_end?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -53,9 +53,9 @@ export interface Database {
         Update: {
           stripe_price_id?: string;
           plan_type?: 'basic' | 'pro';
-          status?: 'active' | 'canceled' | 'past_due' | 'incomplete';
-          current_period_start?: string;
-          current_period_end?: string;
+          status?: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'unpaid';
+          current_period_start?: string | null;
+          current_period_end?: string | null;
           cancel_at_period_end?: boolean;
           updated_at?: string;
         };
