@@ -13,7 +13,14 @@ export default function LibraryPage() {
   const [checkingVideos, setCheckingVideos] = useState<Set<string>>(new Set());
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [processingCleanVoice, setProcessingCleanVoice] = useState(false);
-  const [cleanVoiceResult, setCleanVoiceResult] = useState<any>(null);
+  const [cleanVoiceJobs, setCleanVoiceJobs] = useState<Array<{
+    id: string;
+    status: string;
+    downloadUrl?: string;
+    statistics?: any;
+    error?: string;
+  }>>([]);
+  const [checkingJobId, setCheckingJobId] = useState<string | null>(null);
 
   const filteredVideos = videos.filter((video) => {
     if (filter === 'all') return true;
@@ -70,7 +77,6 @@ export default function LibraryPage() {
     }
 
     setProcessingCleanVoice(true);
-    setCleanVoiceResult(null);
 
     try {
       const response = await fetch('/api/cleanvoice/process', {
@@ -85,14 +91,63 @@ export default function LibraryPage() {
         throw new Error(data.error || 'Failed to process with CleanVoice');
       }
 
-      setCleanVoiceResult(data);
-      alert('Videos submitted to CleanVoice for processing!');
+      // Add the new job to the list
+      if (data.id) {
+        setCleanVoiceJobs((prev) => [
+          { id: data.id, status: 'PENDING' },
+          ...prev,
+        ]);
+      }
+
+      setSelectedVideos(new Set());
+      alert('Videos submitted to CleanVoice for processing! Click "Check Status" to see progress.');
     } catch (error: any) {
       console.error('CleanVoice error:', error);
       alert(error.message || 'Failed to process with CleanVoice');
     } finally {
       setProcessingCleanVoice(false);
     }
+  };
+
+  const checkCleanVoiceStatus = async (jobId: string) => {
+    setCheckingJobId(jobId);
+
+    try {
+      const response = await fetch(`/api/cleanvoice/status/${jobId}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to check status');
+      }
+
+      // Update the job in the list
+      setCleanVoiceJobs((prev) =>
+        prev.map((job) =>
+          job.id === jobId
+            ? {
+                ...job,
+                status: data.status || 'UNKNOWN',
+                downloadUrl: data.result?.download_url,
+                statistics: data.result?.statistics,
+                error: data.error,
+              }
+            : job
+        )
+      );
+    } catch (error: any) {
+      console.error('CleanVoice status check error:', error);
+      setCleanVoiceJobs((prev) =>
+        prev.map((job) =>
+          job.id === jobId ? { ...job, error: error.message } : job
+        )
+      );
+    } finally {
+      setCheckingJobId(null);
+    }
+  };
+
+  const removeCleanVoiceJob = (jobId: string) => {
+    setCleanVoiceJobs((prev) => prev.filter((job) => job.id !== jobId));
   };
 
   const completedVideosCount = videos.filter((v) => v.status === 'completed' && v.video_url).length;
@@ -173,32 +228,79 @@ export default function LibraryPage() {
           </div>
         </div>
 
-        {/* CleanVoice Result */}
-        {cleanVoiceResult && (
-          <Card className="mb-6 border-green-200 bg-green-50">
+        {/* CleanVoice Jobs */}
+        {cleanVoiceJobs.length > 0 && (
+          <Card className="mb-6 border-purple-200 bg-purple-50">
             <CardContent className="p-4">
-              <h3 className="font-semibold text-green-900 mb-2">CleanVoice Processing Started</h3>
-              <p className="text-sm text-green-700 mb-2">
-                Job ID: {cleanVoiceResult.id || 'Processing...'}
-              </p>
-              {cleanVoiceResult.result_url && (
-                <a
-                  href={cleanVoiceResult.result_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-green-600 underline"
-                >
-                  View Result
-                </a>
-              )}
-              <Button
-                onClick={() => setCleanVoiceResult(null)}
-                variant="ghost"
-                size="sm"
-                className="ml-4"
-              >
-                Dismiss
-              </Button>
+              <h3 className="font-semibold text-purple-900 mb-3">CleanVoice Jobs</h3>
+              <div className="space-y-3">
+                {cleanVoiceJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-purple-100"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-mono text-slate-600 mb-1">
+                        {job.id.slice(0, 8)}...
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            job.status === 'SUCCESS'
+                              ? 'success'
+                              : job.status === 'FAILURE'
+                              ? 'error'
+                              : 'warning'
+                          }
+                        >
+                          {job.status}
+                        </Badge>
+                        {job.statistics && (
+                          <span className="text-xs text-slate-500">
+                            Removed: {job.statistics.DEADAIR || 0}s silence,{' '}
+                            {job.statistics.FILLER_SOUND || 0} fillers
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {job.status === 'SUCCESS' && job.downloadUrl ? (
+                        <a
+                          href={job.downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 text-sm rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors"
+                        >
+                          Download
+                        </a>
+                      ) : job.status !== 'SUCCESS' && job.status !== 'FAILURE' ? (
+                        <Button
+                          onClick={() => checkCleanVoiceStatus(job.id)}
+                          disabled={checkingJobId === job.id}
+                          variant="secondary"
+                          size="sm"
+                        >
+                          {checkingJobId === job.id ? (
+                            <>
+                              <Spinner size="sm" className="mr-1" />
+                              Checking...
+                            </>
+                          ) : (
+                            'Check Status'
+                          )}
+                        </Button>
+                      ) : null}
+                      <Button
+                        onClick={() => removeCleanVoiceJob(job.id)}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
