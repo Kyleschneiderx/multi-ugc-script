@@ -282,21 +282,21 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:p-8 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header with Usage */}
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-slate-900 mb-1">
               Create Videos
             </h1>
-            <p className="text-gray-600">
+            <p className="text-slate-600">
               Generate multiple AI videos with HeyGen
             </p>
           </div>
-          <Card className="p-4">
-            <div className="text-sm text-gray-600 mb-1">Usage this month</div>
-            <div className="text-2xl font-bold text-gray-900">
+          <Card className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100">
+            <div className="text-sm font-medium text-indigo-900 mb-1">Usage this month</div>
+            <div className="text-2xl font-bold text-indigo-600">
               {usage.usage || 0} / {usage.limit || 0}
             </div>
             <Progress
@@ -304,7 +304,7 @@ export default function DashboardPage() {
               max={usage.limit || 100}
               className="mt-2"
             />
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-slate-600 mt-1">
               {usage.remaining || 0} videos remaining
             </div>
           </Card>
@@ -455,7 +455,7 @@ export default function DashboardPage() {
                   value={avatarSearch}
                   onChange={(e) => setAvatarSearch(e.target.value)}
                   placeholder="Search avatars by name..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg mb-4 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
                 />
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {filteredGroups.slice(0, avatarsToShow).map((group) => (
@@ -518,7 +518,7 @@ export default function DashboardPage() {
                   value={voiceSearch}
                   onChange={(e) => setVoiceSearch(e.target.value)}
                   placeholder="Search voices by name or language..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg mb-4 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {filteredVoices.slice(0, voicesToShow).map((voice) => (
@@ -690,14 +690,14 @@ export default function DashboardPage() {
                 value={newScriptTitle}
                 onChange={(e) => setNewScriptTitle(e.target.value)}
                 placeholder="Video title (optional)"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg mb-2 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
               />
               <textarea
                 value={newScriptText}
                 onChange={(e) => setNewScriptText(e.target.value)}
                 placeholder="Enter your script here..."
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg mb-2 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none resize-none"
               />
               <Button onClick={handleAddScript} disabled={!newScriptText.trim()}>
                 Add Script

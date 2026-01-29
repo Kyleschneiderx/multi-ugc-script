@@ -88,44 +88,57 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-16 px-4">
+    <div className="min-h-screen bg-gradient-animated py-16 px-4">
+      {/* Navigation */}
+      <nav className="max-w-7xl mx-auto mb-12">
+        <div className="flex items-center justify-between">
+          <a href="/" className="text-2xl font-bold text-gray-900">Clipwave</a>
+          <a
+            href="/login"
+            className="text-gray-600 hover:text-gray-900 font-medium transition"
+          >
+            Sign in
+          </a>
+        </div>
+      </nav>
+
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            Choose Your Plan
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Simple, transparent pricing
           </h1>
-          <p className="text-xl text-gray-600">
-            Start creating AI videos at scale with HeyGen
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Choose the plan that fits your video creation needs. Upgrade or downgrade anytime.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`bg-white rounded-2xl shadow-xl p-8 relative ${
-                plan.popular ? 'ring-4 ring-indigo-600' : ''
+              className={`bg-white rounded-2xl shadow-soft-lg p-8 relative border-2 transition-all hover:shadow-xl ${
+                plan.popular ? 'border-indigo-600' : 'border-transparent'
               }`}
             >
               {plan.popular && (
-                <div className="absolute top-0 right-8 transform -translate-y-1/2">
-                  <span className="bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-md">
                     Most Popular
                   </span>
                 </div>
               )}
 
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">
                   {plan.name}
                 </h2>
-                <div className="flex items-baseline justify-center mb-4">
-                  <span className="text-5xl font-extrabold text-gray-900">
+                <div className="flex items-baseline justify-center mb-2">
+                  <span className="text-5xl font-bold text-slate-900">
                     ${plan.price}
                   </span>
-                  <span className="text-xl text-gray-600 ml-2">/month</span>
+                  <span className="text-lg text-slate-500 ml-2">/month</span>
                 </div>
-                <p className="text-gray-600 font-medium">
+                <p className="text-indigo-600 font-medium">
                   {plan.videoLimit} videos per month
                 </p>
               </div>
@@ -133,20 +146,22 @@ export default function PricingPage() {
               <ul className="space-y-4 mb-8">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-center">
-                    <svg
-                      className="w-5 h-5 text-green-500 mr-3 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-gray-700">{feature}</span>
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3 flex-shrink-0">
+                      <svg
+                        className="w-3 h-3 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-slate-700">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -154,10 +169,10 @@ export default function PricingPage() {
               <button
                 onClick={() => handleSubscribe(plan.priceId, plan.name)}
                 disabled={loading === plan.name}
-                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition ${
+                className={`w-full py-3.5 px-6 rounded-xl font-semibold text-lg transition-all duration-200 ${
                   plan.popular
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md active:scale-[0.98]'
+                    : 'bg-slate-100 text-slate-900 hover:bg-slate-200 active:scale-[0.98]'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {loading === plan.name
@@ -171,11 +186,11 @@ export default function PricingPage() {
         </div>
 
         {!user && (
-          <p className="text-center mt-8 text-gray-600">
+          <p className="text-center mt-10 text-slate-600">
             Already have an account?{' '}
             <a
               href="/login"
-              className="text-indigo-600 hover:text-indigo-700 font-semibold"
+              className="text-indigo-600 hover:text-indigo-700 font-semibold transition"
             >
               Log in
             </a>

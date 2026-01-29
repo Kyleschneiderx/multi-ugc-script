@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 
+const inter = Inter({ subsets: ['latin'] });
+
 export const metadata: Metadata = {
-  title: 'HeyGen Bulk Video Generator',
-  description: 'Create multiple HeyGen videos at once',
+  title: 'Clipwave - AI Video Generator',
+  description: 'Create multiple AI videos at scale with HeyGen',
 };
 
 export default function RootLayout({
@@ -13,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className={`${inter.className} antialiased`}>{children}</body>
     </html>
   );
 }
