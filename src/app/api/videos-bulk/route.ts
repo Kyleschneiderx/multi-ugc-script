@@ -12,7 +12,7 @@ interface Script {
 
 export async function POST(request: Request) {
   try {
-    const { avatarId, voiceId, scripts } = await request.json();
+    const { avatarId, avatarType = 'talking_photo', voiceId, scripts } = await request.json();
 
     if (!avatarId || !voiceId || !scripts || !Array.isArray(scripts)) {
       return NextResponse.json(
@@ -68,6 +68,7 @@ export async function POST(request: Request) {
         // Create video with HeyGen
         const response = await createVideo({
           avatarId,
+          avatarType,
           voiceId,
           script: script.text,
           title: script.title,

@@ -33,10 +33,16 @@ export async function fetchAvatarsInGroup(groupId: string): Promise<Avatar[]> {
   console.log('Raw avatar list from API for group', groupId, ':', avatarList);
 
   // Map the response to match our Avatar interface
+  // Photo avatars use talking_photo_id, regular avatars use avatar_id
   const mapped = avatarList.map((avatar: any, index: number) => {
     if (!avatar.name && !avatar.avatar_name) {
       console.log('Avatar without name:', avatar);
     }
+
+    // Determine if this is a photo avatar based on available fields
+    // Photo avatars typically have 'id' field, regular avatars have 'avatar_id'
+    const isPhotoAvatar = avatar.id && !avatar.avatar_id;
+
     return {
       avatar_id: avatar.id || avatar.avatar_id || `avatar-${index}`,
       avatar_name: avatar.name || avatar.avatar_name || avatar.display_name || `Look ${index + 1}`,
@@ -45,6 +51,7 @@ export async function fetchAvatarsInGroup(groupId: string): Promise<Avatar[]> {
       preview_video_url: avatar.motion_preview_url || avatar.preview_video_url || undefined,
       is_public: true,
       default_voice_id: avatar.default_voice_id || null,
+      avatar_type: isPhotoAvatar ? 'talking_photo' as const : 'avatar' as const,
     };
   });
 
@@ -86,6 +93,7 @@ export async function createVideo({
   title,
   orientation = 'landscape',
   callbackUrl,
+  avatarType = 'talking_photo',
 }: {
   avatarId: string;
   voiceId: string;
@@ -93,19 +101,22 @@ export async function createVideo({
   title?: string;
   orientation?: 'landscape' | 'portrait';
   callbackUrl?: string;
+  avatarType?: 'avatar' | 'talking_photo';
 }): Promise<CreateVideoResponse> {
   // Map orientation to dimension
   const dimension = orientation === 'portrait'
     ? { width: 720, height: 1280 }  // 9:16 portrait
     : { width: 1280, height: 720 }; // 16:9 landscape (default)
 
+  // Build character object based on avatar type
+  const character: any = avatarType === 'talking_photo'
+    ? { type: 'talking_photo', talking_photo_id: avatarId }
+    : { type: 'avatar', avatar_id: avatarId };
+
   const requestBody: any = {
     video_inputs: [
       {
-        character: {
-          type: 'avatar',
-          avatar_id: avatarId,
-        },
+        character,
         voice: {
           type: 'text',
           voice_id: voiceId,
@@ -118,7 +129,7 @@ export async function createVideo({
     test: false,
   };
 
-  // Add callback URL if provided (correct parameter name is callback_url, not callback_id)
+  // Add callback URL if provided
   if (callbackUrl) {
     requestBody.callback_url = callbackUrl;
   }

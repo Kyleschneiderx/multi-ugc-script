@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { avatarId, voiceId, script, title, orientation = 'landscape' } = await request.json();
+    const { avatarId, avatarType = 'talking_photo', voiceId, script, title, orientation = 'landscape' } = await request.json();
 
     if (!avatarId || !voiceId || !script) {
       return NextResponse.json(
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
     // Create video with HeyGen
     const response = await createVideo({
       avatarId,
+      avatarType,
       voiceId,
       script,
       title,

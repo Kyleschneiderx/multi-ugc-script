@@ -6,6 +6,7 @@ export interface Avatar {
   preview_video_url?: string;
   is_public: boolean;
   default_voice_id?: string | null;
+  avatar_type?: 'avatar' | 'talking_photo';
 }
 
 export interface AvatarGroup {

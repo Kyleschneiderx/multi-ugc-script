@@ -229,6 +229,7 @@ export default function DashboardPage() {
         },
         body: JSON.stringify({
           avatarId: selectedAvatar.avatar_id,
+          avatarType: selectedAvatar.avatar_type || 'talking_photo',
           voiceId: selectedVoice.voice_id,
           scripts,
         }),
