@@ -314,10 +314,11 @@ export default function LibraryPage() {
                         {video.processed_url && (
                           <a
                             href={video.processed_url}
-                            download
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm rounded-lg font-semibold transition-colors bg-green-600 text-white hover:bg-green-700"
                           >
-                            Download (No Silence)
+                            Watch (No Silence)
                           </a>
                         )}
                       </div>
