@@ -11,6 +11,9 @@ export default function LibraryPage() {
   const { videos, loading, error, refetch } = useVideos();
   const [filter, setFilter] = useState<'all' | 'completed' | 'processing' | 'failed'>('all');
   const [checkingVideos, setCheckingVideos] = useState<Set<string>>(new Set());
+  const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
+  const [processingCleanVoice, setProcessingCleanVoice] = useState(false);
+  const [cleanVoiceResult, setCleanVoiceResult] = useState<any>(null);
 
   const filteredVideos = videos.filter((video) => {
     if (filter === 'all') return true;
@@ -32,6 +35,67 @@ export default function LibraryPage() {
       });
     }
   };
+
+  const toggleVideoSelection = (videoId: string) => {
+    setSelectedVideos((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllCompleted = () => {
+    const completedIds = videos
+      .filter((v) => v.status === 'completed' && v.video_url)
+      .map((v) => v.id);
+    setSelectedVideos(new Set(completedIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedVideos(new Set());
+  };
+
+  const processWithCleanVoice = async () => {
+    const selectedVideoUrls = videos
+      .filter((v) => selectedVideos.has(v.id) && v.video_url)
+      .map((v) => v.video_url!);
+
+    if (selectedVideoUrls.length === 0) {
+      alert('No videos with URLs selected');
+      return;
+    }
+
+    setProcessingCleanVoice(true);
+    setCleanVoiceResult(null);
+
+    try {
+      const response = await fetch('/api/cleanvoice/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrls: selectedVideoUrls }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process with CleanVoice');
+      }
+
+      setCleanVoiceResult(data);
+      alert('Videos submitted to CleanVoice for processing!');
+    } catch (error: any) {
+      console.error('CleanVoice error:', error);
+      alert(error.message || 'Failed to process with CleanVoice');
+    } finally {
+      setProcessingCleanVoice(false);
+    }
+  };
+
+  const completedVideosCount = videos.filter((v) => v.status === 'completed' && v.video_url).length;
 
   const getStatusColor = (status: Video['status']) => {
     switch (status) {
@@ -66,17 +130,78 @@ export default function LibraryPage() {
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Video Library</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-slate-900 mb-1">Video Library</h1>
+            <p className="text-slate-600">
               View and manage all your generated videos
             </p>
           </div>
-          <Button onClick={refetch} variant="secondary">
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            {selectedVideos.size > 0 && (
+              <>
+                <span className="text-sm text-slate-600">
+                  {selectedVideos.size} selected
+                </span>
+                <Button onClick={clearSelection} variant="ghost" size="sm">
+                  Clear
+                </Button>
+                <Button
+                  onClick={processWithCleanVoice}
+                  disabled={processingCleanVoice}
+                  size="sm"
+                >
+                  {processingCleanVoice ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Process with CleanVoice'
+                  )}
+                </Button>
+              </>
+            )}
+            {completedVideosCount > 0 && selectedVideos.size === 0 && (
+              <Button onClick={selectAllCompleted} variant="secondary" size="sm">
+                Select All Completed
+              </Button>
+            )}
+            <Button onClick={refetch} variant="secondary" size="sm">
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        {/* CleanVoice Result */}
+        {cleanVoiceResult && (
+          <Card className="mb-6 border-green-200 bg-green-50">
+            <CardContent className="p-4">
+              <h3 className="font-semibold text-green-900 mb-2">CleanVoice Processing Started</h3>
+              <p className="text-sm text-green-700 mb-2">
+                Job ID: {cleanVoiceResult.id || 'Processing...'}
+              </p>
+              {cleanVoiceResult.result_url && (
+                <a
+                  href={cleanVoiceResult.result_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-green-600 underline"
+                >
+                  View Result
+                </a>
+              )}
+              <Button
+                onClick={() => setCleanVoiceResult(null)}
+                variant="ghost"
+                size="sm"
+                className="ml-4"
+              >
+                Dismiss
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filter Tabs */}
         <div className="mb-6">
@@ -124,9 +249,20 @@ export default function LibraryPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video) => (
-              <Card key={video.id} className="overflow-hidden">
+              <Card key={video.id} className={`overflow-hidden transition-all ${selectedVideos.has(video.id) ? 'ring-2 ring-indigo-500' : ''}`}>
                 {/* Video Thumbnail/Preview */}
                 <div className="aspect-video bg-gray-200 relative">
+                  {/* Selection checkbox for completed videos */}
+                  {video.status === 'completed' && video.video_url && (
+                    <div className="absolute top-2 left-2 z-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedVideos.has(video.id)}
+                        onChange={() => toggleVideoSelection(video.id)}
+                        className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                    </div>
+                  )}
                   {video.thumbnail_url ? (
                     <img
                       src={video.thumbnail_url}
