@@ -31,7 +31,7 @@ export default function Home() {
               href="/signup"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-indigo-600 text-white rounded-xl font-semibold text-lg hover:bg-indigo-700 transition-all hover:shadow-soft-lg hover:-translate-y-0.5"
             >
-              Start creating free
+              Start creating
               <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -44,10 +44,6 @@ export default function Home() {
             </a>
           </div>
 
-          {/* Social proof hint */}
-          <p className="mt-10 text-sm text-gray-500">
-            No credit card required • 50 free videos per month
-          </p>
         </div>
       </main>
     </div>
