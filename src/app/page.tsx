@@ -17,12 +17,6 @@ export default function Home() {
       {/* Hero Section */}
       <main className="flex-1 flex items-center justify-center px-6">
         <div className="max-w-4xl mx-auto text-center animate-fade-in">
-          <div className="mb-6">
-            <span className="inline-block px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full text-sm font-medium text-indigo-600 border border-indigo-100">
-              Powered by HeyGen AI
-            </span>
-          </div>
-
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 tracking-tight">
             Create AI videos
             <span className="block text-gradient">at scale</span>

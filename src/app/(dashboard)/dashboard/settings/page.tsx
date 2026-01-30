@@ -178,26 +178,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* API Settings */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>API Configuration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>HeyGen API:</strong> Connected and active
-                </p>
-              </div>
-              <p className="text-sm text-gray-600">
-                This application uses your HeyGen API key configured in the environment
-                variables.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Danger Zone */}
         <Card className="border-red-200">
           <CardHeader>
