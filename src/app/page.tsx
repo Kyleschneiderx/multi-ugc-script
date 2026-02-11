@@ -58,20 +58,14 @@ export default function Home() {
             </a>
           </div>
 
-          {/* Hero visual placeholder */}
-          <div className="max-w-4xl mx-auto">
-            <div className="relative rounded-2xl overflow-hidden shadow-soft-lg border border-gray-200 bg-white">
-              <div className="aspect-[16/9] bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-                    </svg>
-                  </div>
-                  <p className="text-gray-500 font-medium">Bulk AI Video Dashboard</p>
-                  <p className="text-gray-400 text-sm mt-1">Upload scripts, select avatars, generate at scale</p>
-                </div>
-              </div>
+          {/* Dashboard preview */}
+          <div className="max-w-5xl mx-auto">
+            <div className="relative rounded-2xl overflow-hidden shadow-soft-lg border border-gray-200">
+              <img
+                src="/dashboard-preview.png"
+                alt="Clipwave dashboard - Create AI videos at scale"
+                className="w-full h-auto"
+              />
             </div>
           </div>
         </div>
