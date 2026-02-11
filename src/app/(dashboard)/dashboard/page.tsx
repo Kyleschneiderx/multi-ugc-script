@@ -292,7 +292,7 @@ export default function DashboardPage() {
               Create Videos
             </h1>
             <p className="text-slate-600">
-              Generate multiple AI videos with HeyGen
+              Generate multiple AI videos at scale
             </p>
           </div>
           <Card className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100">
